@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +17,15 @@ func main() {
 	}
 
 	route := gin.Default() // start the route definition
+
+	route.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:   []string{"Content-Length"},
+		// AllowCredentials: false, // must be false when using "*"
+		MaxAge: 12 * time.Hour,
+	}))
 
 	route.GET("/app", func(c *gin.Context) { // what to listen fore
 		randomIndex := rand.Intn(len(sentences)) // what happen when u go to this path
