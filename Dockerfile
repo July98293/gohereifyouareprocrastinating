@@ -1,18 +1,14 @@
 # ---- build ----
 FROM golang:1.23-alpine AS build
 WORKDIR /app
-
-# tools needed for go mod download from VCS
 RUN apk add --no-cache git ca-certificates && update-ca-certificates
 
-# copy ONLY the module files first (so Docker can cache deps)
+# copy module files first for caching
 COPY go.mod ./
-# copy go.sum if it exists; if you don’t have it yet, see note below
-COPY go.sum . 2>/dev/null || true
-
+COPY go.sum ./
 RUN go mod download
 
-# now copy the rest and build
+# copy source and build
 COPY . .
 ENV CGO_ENABLED=0
 RUN go build -o main main.go
