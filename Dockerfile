@@ -1,31 +1,18 @@
+# ---- build ----
 FROM golang:1.23-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 
-# Tools needed to fetch modules
-RUN apk add --no-cache git ca-certificates openssh && update-ca-certificates
+# copy module files + vendor first (cache-friendly)
+COPY go.mod go.sum ./
+COPY vendor/ ./vendor/
 
-# Helpful Go env (tweak if you use a corporate proxy)
-ENV GOPROXY=https://proxy.golang.org,direct \
-    GOSUMDB=sum.golang.org \
-    CGO_ENABLED=0
-
-# Copy only module files first
-COPY go.mod ./
-COPY go.sum ./
-
-# Print verbose details so we see the exact error
-RUN set -eux; \
-    go version; \
-    go env; \
-    echo "----- go.mod -----"; cat go.mod; \
-    echo "----- go.sum (first 20 lines) -----"; head -n 20 go.sum || true; \
-    echo "----- running go mod download -x -----"; \
-    go mod download -x
-
-# If we get here, deps resolved; now build
+# copy source and build using vendor mode
 COPY . .
-RUN go build -o main main.go
+ENV CGO_ENABLED=0
+RUN go build -mod=vendor -o main main.go
 
+# ---- runtime ----
 FROM alpine:3.20
 WORKDIR /app
 RUN apk add --no-cache ca-certificates && update-ca-certificates
