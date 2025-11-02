@@ -40,6 +40,6 @@ func main() {
 			"minutes": randominute,
 		})
 	})
-	route.Run("127.0.0.1:8080") // local host
+	route.Run("127.0.0.1:6768") // local host
 
 }
